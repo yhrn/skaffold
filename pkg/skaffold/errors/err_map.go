@@ -35,13 +35,6 @@ func re(s string) *regexp.Regexp {
 	return regexp.MustCompile(s)
 }
 
-type problem struct {
-	regexp      *regexp.Regexp
-	description func(error) string
-	errCode     proto.StatusCode
-	suggestion  func(runCtx runcontext.RunContext) []*proto.Suggestion
-}
-
 var (
 
 	// regex for detecting old manifest images

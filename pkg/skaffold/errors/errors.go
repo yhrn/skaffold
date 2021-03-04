@@ -79,19 +79,16 @@ func ShowAIError(err error) error {
 		instrumentation.SetErrorCode(err.(Error).StatusCode())
 		return err
 	}
+	if p, ok := isProblem(err); ok {
+		instrumentation.SetErrorCode(p.errCode)
+		return p
+	}
 
 	var knownProblems = append(knownBuildProblems, knownDeployProblems...)
-	for _, v := range append(knownProblems, knownInitProblems...) {
-		if v.regexp.MatchString(err.Error()) {
-			instrumentation.SetErrorCode(v.errCode)
-			if suggestions := v.suggestion(runCtx); suggestions != nil {
-				description := fmt.Sprintf("%s\n", err)
-				if v.description != nil {
-					description = strings.Trim(v.description(err), ".")
-				}
-				return fmt.Errorf("%s. %s", description, concatSuggestions(suggestions))
-			}
-			return fmt.Errorf(v.description(err))
+	for _, p := range append(knownProblems, knownInitProblems...) {
+		if p.regexp.MatchString(err.Error()) {
+			instrumentation.SetErrorCode(p.errCode)
+			return p.withErr(err)
 		}
 	}
 	return err
@@ -117,7 +114,7 @@ func getErrorCodeFromError(phase Phase, err error) (proto.StatusCode, []*proto.S
 	if problems, ok := allErrors[phase]; ok {
 		for _, v := range problems {
 			if v.regexp.MatchString(err.Error()) {
-				return v.errCode, v.suggestion(runCtx)
+				return v.errCode, v.suggestion(skaffoldOpts)
 			}
 		}
 	}

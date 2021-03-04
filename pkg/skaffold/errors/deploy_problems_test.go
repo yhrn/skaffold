@@ -19,7 +19,10 @@ package errors
 import (
 	"testing"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
+	"k8s.io/client-go/tools/clientcmd/api"
+
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
+	kubectx "github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes/context"
 	"github.com/GoogleContainerTools/skaffold/proto/v1"
 	"github.com/GoogleContainerTools/skaffold/testutil"
 )
