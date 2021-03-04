@@ -46,7 +46,7 @@ var (
 	setRunContextOnce sync.Once
 	runCtx            runcontext.RunContext
 
-	reportIssueSuggestion = func(runcontext.RunContext) []*proto.Suggestion {
+	reportIssueSuggestion = func(ctx runcontext.RunContext) []*proto.Suggestion {
 		return []*proto.Suggestion{{
 			SuggestionCode: proto.SuggestionCode_OPEN_ISSUE,
 			Action:         reportIssueText,
@@ -114,7 +114,7 @@ func getErrorCodeFromError(phase Phase, err error) (proto.StatusCode, []*proto.S
 	if problems, ok := allErrors[phase]; ok {
 		for _, v := range problems {
 			if v.regexp.MatchString(err.Error()) {
-				return v.errCode, v.suggestion(skaffoldOpts)
+				return v.errCode, v.suggestion(runCtx)
 			}
 		}
 	}

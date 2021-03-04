@@ -19,10 +19,7 @@ package errors
 import (
 	"testing"
 
-	"k8s.io/client-go/tools/clientcmd/api"
-
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
-	kubectx "github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes/context"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/proto/v1"
 	"github.com/GoogleContainerTools/skaffold/testutil"
 )
@@ -40,7 +37,7 @@ func TestSuggestDeployFailedAction(t *testing.T) {
 			isMinikube:  true,
 			expected: []*proto.Suggestion{{
 				SuggestionCode: proto.SuggestionCode_CHECK_MINIKUBE_STATUS,
-				Action:         "Check if minikube is running using `minikube status` command and try again.",
+				Action: "Check if minikube is running using `minikube status` command and try again.",
 			}},
 		},
 		{

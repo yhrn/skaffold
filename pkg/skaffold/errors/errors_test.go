@@ -340,7 +340,6 @@ func TestIsOldImageManifestProblem(t *testing.T) {
 				},
 			}
 			actualMsg, actual := IsOldImageManifestProblem(test.err)
-			fmt.Println(actualMsg)
 			t.CheckDeepEqual(test.expectedMsg, actualMsg)
 			t.CheckDeepEqual(test.expected, actual)
 		})
