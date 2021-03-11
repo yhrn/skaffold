@@ -115,11 +115,6 @@ func (ev *eventHandler) getState() proto.State {
 	return state
 }
 
-func (ev *eventHandler) getCfg() Config {
-	cfg := ev.cfg
-	return cfg
-}
-
 func (ev *eventHandler) logEvent(entry proto.LogEntry) {
 	ev.logLock.Lock()
 
