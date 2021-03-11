@@ -17,11 +17,14 @@ limitations under the License.
 package kustomize
 
 import (
-	deployerr "github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy/error"
 	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
 	"github.com/GoogleContainerTools/skaffold/proto/v1"
 )
 
-func userErr(cfg sErrors.Config, err error) error {
-	return deployerr.UserError(cfg, err, proto.StatusCode_DEPLOY_KUSTOMIZE_USER_ERR)
+func userErr(err error) error {
+	return sErrors.NewError(err,
+		proto.ActionableErr{
+			Message: err.Error(),
+			ErrCode: proto.StatusCode_DEPLOY_KUSTOMIZE_USER_ERR,
+		})
 }

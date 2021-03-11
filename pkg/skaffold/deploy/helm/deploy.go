@@ -30,7 +30,6 @@ import (
 	"strings"
 	"time"
 
-	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
 	"github.com/blang/semver"
 	backoff "github.com/cenkalti/backoff/v4"
 	shell "github.com/kballard/go-shellquote"
@@ -73,7 +72,6 @@ var (
 // Deployer deploys workflows using the helm CLI
 type Deployer struct {
 	*latest.HelmDeploy
-	errCfg sErrors.Config
 
 	kubeContext string
 	kubeConfig  string
@@ -113,7 +111,6 @@ func NewDeployer(cfg kubectl.Config, labels map[string]string, h *latest.HelmDep
 		labels:      labels,
 		bV:          hv,
 		enableDebug: cfg.Mode() == config.RunModes.Debug,
-		errCfg:      cfg,
 	}, nil
 }
 
@@ -129,11 +126,11 @@ func (h *Deployer) Deploy(ctx context.Context, out io.Writer, builds []build.Art
 	for _, r := range h.Releases {
 		releaseName, err := util.ExpandEnvTemplateOrFail(r.Name, nil)
 		if err != nil {
-			return nil, userErr(h.errCfg, fmt.Sprintf("cannot expand release name %q", r.Name), err)
+			return nil, userErr(fmt.Sprintf("cannot expand release name %q", r.Name), err)
 		}
 		results, err := h.deployRelease(ctx, out, releaseName, r, builds, valuesSet, h.bV)
 		if err != nil {
-			return nil, userErr(h.errCfg, fmt.Sprintf("deploying %q", releaseName), err)
+			return nil, userErr(fmt.Sprintf("deploying %q", releaseName), err)
 		}
 
 		// collect namespaces
@@ -220,7 +217,7 @@ func (h *Deployer) Dependencies() ([]string, error) {
 		}
 
 		if err := walk.From(release.ChartPath).When(isDep).AppendPaths(&deps); err != nil {
-			return deps, userErr(h.errCfg, "issue walking releases", err)
+			return deps, userErr("issue walking releases", err)
 		}
 	}
 	sort.Strings(deps)
@@ -280,7 +277,7 @@ func (h *Deployer) Render(ctx context.Context, out io.Writer, builds []build.Art
 
 		args, err = constructOverrideArgs(&r, builds, args, func(string) {})
 		if err != nil {
-			return userErr(h.errCfg, "construct override args", err)
+			return userErr("construct override args", err)
 		}
 
 		namespace, err := h.releaseNamespace(r)
@@ -293,7 +290,7 @@ func (h *Deployer) Render(ctx context.Context, out io.Writer, builds []build.Art
 
 		outBuffer := new(bytes.Buffer)
 		if err := h.exec(ctx, outBuffer, false, nil, args...); err != nil {
-			return userErr(h.errCfg, "std out err", fmt.Errorf(outBuffer.String()))
+			return userErr("std out err", fmt.Errorf(outBuffer.String()))
 		}
 		renderedManifests.Write(outBuffer.Bytes())
 	}
@@ -369,7 +366,7 @@ func (h *Deployer) deployRelease(ctx context.Context, out io.Writer, releaseName
 		logrus.Infof("Building helm dependencies...")
 
 		if err := h.exec(ctx, out, false, nil, "dep", "build", r.ChartPath); err != nil {
-			return nil, userErr(h.errCfg, "building helm dependencies", err)
+			return nil, userErr("building helm dependencies", err)
 		}
 	}
 
@@ -377,11 +374,11 @@ func (h *Deployer) deployRelease(ctx context.Context, out io.Writer, releaseName
 	if len(r.Overrides.Values) != 0 {
 		overrides, err := yaml.Marshal(r.Overrides)
 		if err != nil {
-			return nil, userErr(h.errCfg, "cannot marshal overrides to create overrides values.yaml", err)
+			return nil, userErr("cannot marshal overrides to create overrides values.yaml", err)
 		}
 
 		if err := ioutil.WriteFile(constants.HelmOverridesFilename, overrides, 0666); err != nil {
-			return nil, userErr(h.errCfg, fmt.Sprintf("cannot create file %q", constants.HelmOverridesFilename), err)
+			return nil, userErr(fmt.Sprintf("cannot create file %q", constants.HelmOverridesFilename), err)
 		}
 
 		defer func() {
@@ -392,7 +389,7 @@ func (h *Deployer) deployRelease(ctx context.Context, out io.Writer, releaseName
 	if r.Packaged != nil {
 		chartPath, err := h.packageChart(ctx, r)
 		if err != nil {
-			return nil, userErr(h.errCfg, "cannot package chart", err)
+			return nil, userErr("cannot package chart", err)
 		}
 
 		opts.chartPath = chartPath
@@ -400,17 +397,17 @@ func (h *Deployer) deployRelease(ctx context.Context, out io.Writer, releaseName
 
 	args, err := h.installArgs(r, builds, valuesSet, opts)
 	if err != nil {
-		return nil, userErr(h.errCfg, "release args", err)
+		return nil, userErr("release args", err)
 	}
 
 	err = h.exec(ctx, out, r.UseHelmSecrets, installEnv, args...)
 	if err != nil {
-		return nil, userErr(h.errCfg, "install", err)
+		return nil, userErr("install", err)
 	}
 
 	b, err := h.getRelease(ctx, releaseName, opts.namespace)
 	if err != nil {
-		return nil, userErr(h.errCfg, "get release", err)
+		return nil, userErr("get release", err)
 	}
 
 	artifacts := parseReleaseInfo(opts.namespace, bufio.NewReader(&b))
