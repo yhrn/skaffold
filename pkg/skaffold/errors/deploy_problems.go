@@ -36,12 +36,12 @@ func suggestDeployFailedAction(cfg Config) []*proto.Suggestion {
 		}
 		return []*proto.Suggestion{{
 			SuggestionCode: proto.SuggestionCode_CHECK_MINIKUBE_STATUS,
-			Action:         fmt.Sprintf("Check if minikube is running using `%s` cmd and try again.", command),
+			Action:         fmt.Sprintf("Check if minikube is running using %q and try again.", command),
 		}}
 	}
 
 	return []*proto.Suggestion{{
 		SuggestionCode: proto.SuggestionCode_CHECK_CLUSTER_CONNECTION,
-		Action:         fmt.Sprintf("Check your connection for %s cluster", cfg.GetKubeContext()),
+		Action:         fmt.Sprintf("Check your connection to the %q cluster", cfg.GetKubeContext()),
 	}}
 }

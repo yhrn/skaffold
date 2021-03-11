@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
+	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
@@ -40,6 +41,10 @@ type mockDevRunner struct {
 func (r *mockDevRunner) Dev(context.Context, io.Writer, []*latest.Artifact) error {
 	r.calls = append(r.calls, "Dev")
 	return r.errDev
+}
+
+func (r *mockDevRunner) ErrConfig() sErrors.Config {
+	return &runcontext.RunContext{}
 }
 
 func (r *mockDevRunner) HasBuilt() bool {
@@ -96,8 +101,8 @@ func TestDoDev(t *testing.T) {
 				hasDeployed: test.hasDeployed,
 				errDev:      context.Canceled,
 			}
-			t.Override(&createRunner, func(io.Writer, config.SkaffoldOptions) (runner.Runner, *runcontext.RunContext, []*latest.SkaffoldConfig, error) {
-				return mockRunner, &runcontext.RunContext{}, []*latest.SkaffoldConfig{{}}, nil
+			t.Override(&createRunner, func(io.Writer, config.SkaffoldOptions) (runner.Runner, []*latest.SkaffoldConfig, error) {
+				return mockRunner, []*latest.SkaffoldConfig{{}}, nil
 			})
 			t.Override(&opts, config.SkaffoldOptions{
 				Cleanup: true,
@@ -134,6 +139,10 @@ func (m *mockConfigChangeRunner) HasDeployed() bool {
 	return true
 }
 
+func (m *mockConfigChangeRunner) ErrConfig() sErrors.Config {
+	return &runcontext.RunContext{}
+}
+
 func (m *mockConfigChangeRunner) Prune(context.Context, io.Writer) error {
 	return nil
 }
@@ -146,8 +155,8 @@ func TestDevConfigChange(t *testing.T) {
 	testutil.Run(t, "test config change", func(t *testutil.T) {
 		mockRunner := &mockConfigChangeRunner{}
 
-		t.Override(&createRunner, func(io.Writer, config.SkaffoldOptions) (runner.Runner, *runcontext.RunContext, []*latest.SkaffoldConfig, error) {
-			return mockRunner, nil, []*latest.SkaffoldConfig{{}}, nil
+		t.Override(&createRunner, func(io.Writer, config.SkaffoldOptions) (runner.Runner, []*latest.SkaffoldConfig, error) {
+			return mockRunner, []*latest.SkaffoldConfig{{}}, nil
 		})
 		t.Override(&opts, config.SkaffoldOptions{
 			Cleanup: true,

@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy/label"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy/status"
+	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/filemon"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubectl"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
@@ -54,6 +55,7 @@ type Runner interface {
 	Prune(context.Context, io.Writer) error
 	HasDeployed() bool
 	HasBuilt() bool
+	ErrConfig() sErrors.Config
 }
 
 // SkaffoldRunner is responsible for running the skaffold build, test and deploy config.
@@ -96,4 +98,8 @@ func (r *SkaffoldRunner) HasDeployed() bool {
 // HasBuilt returns true if this runner has built something.
 func (r *SkaffoldRunner) HasBuilt() bool {
 	return r.hasBuilt
+}
+
+func (r *SkaffoldRunner) ErrConfig() sErrors.Config {
+	return r.runCtx
 }

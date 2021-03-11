@@ -36,7 +36,7 @@ func TestSuggestDeployFailedAction(t *testing.T) {
 			isMinikube:  true,
 			expected: []*proto.Suggestion{{
 				SuggestionCode: proto.SuggestionCode_CHECK_MINIKUBE_STATUS,
-				Action:         "Check if minikube is running using `minikube status` cmd and try again.",
+				Action:         "Check if minikube is running using \"minikube status\" and try again.",
 			}},
 		},
 		{
@@ -45,7 +45,7 @@ func TestSuggestDeployFailedAction(t *testing.T) {
 			isMinikube:  true,
 			expected: []*proto.Suggestion{{
 				SuggestionCode: proto.SuggestionCode_CHECK_MINIKUBE_STATUS,
-				Action:         "Check if minikube is running using `minikube status -p test_cluster` cmd and try again.",
+				Action:         "Check if minikube is running using \"minikube status -p test_cluster\" and try again.",
 			}},
 		},
 		{
@@ -54,7 +54,7 @@ func TestSuggestDeployFailedAction(t *testing.T) {
 			isMinikube:  false,
 			expected: []*proto.Suggestion{{
 				SuggestionCode: proto.SuggestionCode_CHECK_CLUSTER_CONNECTION,
-				Action:         "Check your connection for gke_test cluster",
+				Action:         "Check your connection to the \"gke_test\" cluster",
 			}},
 		},
 	}

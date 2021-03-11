@@ -268,9 +268,9 @@ func setUpLogs(stdErr io.Writer, level string, timestamp bool) error {
 
 func alwaysSucceedWhenCancelled(ctx context.Context, cfg sErrors.Config, err error) error {
 	// if the context was cancelled act as if all is well
-	if err != nil && ctx.Err() == context.Canceled {
+	if ctx.Err() == context.Canceled {
 		return nil
-	} else if err == nil || err == context.Canceled {
+	} else if err == context.Canceled {
 		return err
 	}
 	return sErrors.ShowAIError(cfg, err)
