@@ -85,7 +85,7 @@ See https://skaffold.dev/docs/pipeline-stages/taggers/#how-tagging-works`)
 	namespaces, err := r.deployer.Deploy(ctx, deployOut, artifacts)
 	postDeployFn()
 	if err != nil {
-		event.DeployFailed(err)
+		event.DeployFailed(r.runCtx, err)
 		return err
 	}
 

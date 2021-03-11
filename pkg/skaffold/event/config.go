@@ -21,9 +21,19 @@ import (
 )
 
 type Config interface {
+<<<<<<< HEAD
 	GetKubeContext() string
 	AutoBuild() bool
 	AutoDeploy() bool
 	AutoSync() bool
+=======
+	Command() string
+	GetKubeContext() string
+	DefaultRepo() *string
+	GlobalConfig() string
+  AutoBuild() bool
+  AutoDeploy() bool
+  AutoSync() bool
+>>>>>>> 1d7920092 (wip)
 	GetPipelines() []latest.Pipeline
 }

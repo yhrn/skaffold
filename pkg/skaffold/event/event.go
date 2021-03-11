@@ -200,8 +200,8 @@ func DeployInProgress() {
 }
 
 // DeployFailed notifies that non-fatal errors were encountered during a deployment.
-func DeployFailed(err error) {
-	aiErr := sErrors.ActionableErr(sErrors.Deploy, err)
+func DeployFailed(cfg sErrors.Config, err error) {
+	aiErr := sErrors.ActionableErr(cfg, sErrors.Deploy, err)
 	handler.stateLock.Lock()
 	handler.state.DeployState.StatusCode = aiErr.ErrCode
 	handler.stateLock.Unlock()
