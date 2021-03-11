@@ -19,7 +19,6 @@ package errors
 import (
 	"testing"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/proto/v1"
 	"github.com/GoogleContainerTools/skaffold/testutil"
 )
@@ -37,7 +36,7 @@ func TestSuggestDeployFailedAction(t *testing.T) {
 			isMinikube:  true,
 			expected: []*proto.Suggestion{{
 				SuggestionCode: proto.SuggestionCode_CHECK_MINIKUBE_STATUS,
-				Action:         "Check if minikube is running using `minikube status` command and try again.",
+				Action:         "Check if minikube is running using `minikube status` cmd and try again.",
 			}},
 		},
 		{
@@ -46,7 +45,7 @@ func TestSuggestDeployFailedAction(t *testing.T) {
 			isMinikube:  true,
 			expected: []*proto.Suggestion{{
 				SuggestionCode: proto.SuggestionCode_CHECK_MINIKUBE_STATUS,
-				Action:         "Check if minikube is running using `minikube status -p test_cluster` command and try again.",
+				Action:         "Check if minikube is running using `minikube status -p test_cluster` cmd and try again.",
 			}},
 		},
 		{
@@ -55,19 +54,16 @@ func TestSuggestDeployFailedAction(t *testing.T) {
 			isMinikube:  false,
 			expected: []*proto.Suggestion{{
 				SuggestionCode: proto.SuggestionCode_CHECK_CLUSTER_CONNECTION,
-				Action:         "Check your connection for the cluster",
+				Action:         "Check your connection for gke_test cluster",
 			}},
 		},
 	}
 	for _, test := range tests {
 		testutil.Run(t, test.description, func(t *testutil.T) {
-			runCtx := runcontext.RunContext{
-				KubeContext: test.context,
-			}
 			t.Override(&isMinikube, func(string) bool {
 				return test.isMinikube
 			})
-			actual := suggestDeployFailedAction(runCtx)
+			actual := suggestDeployFailedAction(dummyConfig{kubectx: test.context})
 			t.CheckDeepEqual(test.expected, actual)
 		})
 	}

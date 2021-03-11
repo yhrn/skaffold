@@ -21,27 +21,28 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/proto/v1"
 )
 
 type Description func(error) string
-type Suggestion func(runcontext.RunContext) []*proto.Suggestion
+type Suggestion func(Config) []*proto.Suggestion
 
 type problem struct {
 	regexp      *regexp.Regexp
 	description func(error) string
 	errCode     proto.StatusCode
-	suggestion  func(rc runcontext.RunContext) []*proto.Suggestion
+	cfg         Config
+	suggestion  func(Config) []*proto.Suggestion
 	err         error
 }
 
-func NewProblem(d Description, sc proto.StatusCode, s Suggestion, err error) problem {
+func NewProblem(d Description, sc proto.StatusCode, config Config, s Suggestion, err error) problem {
 	return problem{
 		description: d,
 		errCode:     sc,
 		suggestion:  s,
 		err:         err,
+		cfg:         config,
 	}
 }
 
@@ -50,14 +51,15 @@ func (p problem) Error() string {
 	if p.description != nil {
 		description = p.description(p.err)
 	}
-	if suggestions := p.suggestion(runCtx); suggestions != nil {
+	if suggestions := p.suggestion(p.cfg); suggestions != nil {
 		return fmt.Sprintf("%s. %s", strings.Trim(description, "."), concatSuggestions(suggestions))
 	}
 	return description
 }
 
-func (p problem) withErr(err error) problem {
+func (p problem) withConfigAndErr(cfg Config, err error) problem {
 	p.err = err
+	p.cfg = cfg
 	return p
 }
 

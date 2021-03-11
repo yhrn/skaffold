@@ -21,28 +21,22 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/proto/v1"
 	"github.com/GoogleContainerTools/skaffold/testutil"
-)
-
-var (
-	dummyRunCtx = runcontext.RunContext{}
 )
 
 func TestShowAIError(t *testing.T) {
 	tests := []struct {
 		description string
-		opts        config.SkaffoldOptions
+		cfg         Config
 		phase       Phase
-		context     *config.ContextConfig
 		err         error
 		expected    string
 		expectedAE  *proto.ActionableErr
 	}{
 		{
-			description: "Push access denied when neither default repo or global config is defined",
-			context:     &config.ContextConfig{},
+			description: "Push access denied when neither default repo or global cfg is defined",
+			cfg:         dummyConfig{},
 			phase:       Build,
 			err:         fmt.Errorf("skaffold build failed: could not push image: denied: push access to resource"),
 			expected:    "Build Failed. No push access to specified image repository. Trying running with `--default-repo` flag.",
@@ -57,7 +51,7 @@ func TestShowAIError(t *testing.T) {
 		},
 		{
 			description: "Push access denied when default repo is defined",
-			opts:        config.SkaffoldOptions{DefaultRepo: stringOrUndefined("gcr.io/test")},
+			cfg:         dummyConfig{repo: "gcr.io/test"},
 			phase:       Build,
 			err:         fmt.Errorf("skaffold build failed: could not push image image1 : denied: push access to resource"),
 			expected:    "Build Failed. No push access to specified image repository. Check your `--default-repo` value or try `gcloud auth configure-docker`.",
@@ -76,16 +70,16 @@ func TestShowAIError(t *testing.T) {
 		},
 		{
 			description: "Push access denied when global repo is defined",
-			context:     &config.ContextConfig{DefaultRepo: "docker.io/global"},
+			cfg:         dummyConfig{globalCfg: "docker.io/global"},
 			phase:       Build,
 			err:         fmt.Errorf("skaffold build failed: could not push image: denied: push access to resource"),
-			expected:    "Build Failed. No push access to specified image repository. Check your default-repo setting in skaffold config or try `docker login`.",
+			expected:    "Build Failed. No push access to specified image repository. Check your default-repo setting in skaffold cfg or try `docker login`.",
 			expectedAE: &proto.ActionableErr{
 				ErrCode: proto.StatusCode_BUILD_PUSH_ACCESS_DENIED,
 				Message: "skaffold build failed: could not push image: denied: push access to resource",
 				Suggestions: []*proto.Suggestion{{
 					SuggestionCode: proto.SuggestionCode_CHECK_DEFAULT_REPO_GLOBAL_CONFIG,
-					Action:         "Check your default-repo setting in skaffold config",
+					Action:         "Check your default-repo setting in skaffold cfg",
 				}, {
 					SuggestionCode: proto.SuggestionCode_DOCKER_AUTH_CONFIGURE,
 					Action:         "try `docker login`",
@@ -172,14 +166,14 @@ func TestShowAIError(t *testing.T) {
 		// unknown errors case
 		{
 			description: "build unknown error",
-			context:     &config.ContextConfig{DefaultRepo: "docker.io/global"},
+			cfg:         dummyConfig{repo: "docker.io/global"},
 			phase:       Build,
 			err:         fmt.Errorf("build failed: something went wrong"),
 			expected:    "build failed: something went wrong",
 			expectedAE: &proto.ActionableErr{
 				ErrCode:     proto.StatusCode_BUILD_UNKNOWN,
 				Message:     "build failed: something went wrong",
-				Suggestions: reportIssueSuggestion(dummyRunCtx),
+				Suggestions: reportIssueSuggestion(dummyConfig{}),
 			},
 		},
 		{
@@ -190,7 +184,7 @@ func TestShowAIError(t *testing.T) {
 			expectedAE: &proto.ActionableErr{
 				ErrCode:     proto.StatusCode_DEPLOY_UNKNOWN,
 				Message:     "deploy failed: something went wrong",
-				Suggestions: reportIssueSuggestion(dummyRunCtx),
+				Suggestions: reportIssueSuggestion(dummyConfig{}),
 			},
 		},
 		{
@@ -201,7 +195,7 @@ func TestShowAIError(t *testing.T) {
 			expectedAE: &proto.ActionableErr{
 				ErrCode:     proto.StatusCode_SYNC_UNKNOWN,
 				Message:     "sync failed: something went wrong",
-				Suggestions: reportIssueSuggestion(dummyRunCtx),
+				Suggestions: reportIssueSuggestion(dummyConfig{}),
 			},
 		},
 		{
@@ -212,7 +206,7 @@ func TestShowAIError(t *testing.T) {
 			expectedAE: &proto.ActionableErr{
 				ErrCode:     proto.StatusCode_INIT_UNKNOWN,
 				Message:     "init failed: something went wrong",
-				Suggestions: reportIssueSuggestion(dummyRunCtx),
+				Suggestions: reportIssueSuggestion(dummyConfig{}),
 			},
 		},
 		{
@@ -223,7 +217,7 @@ func TestShowAIError(t *testing.T) {
 			expectedAE: &proto.ActionableErr{
 				ErrCode:     proto.StatusCode_CLEANUP_UNKNOWN,
 				Message:     "failed: something went wrong",
-				Suggestions: reportIssueSuggestion(dummyRunCtx),
+				Suggestions: reportIssueSuggestion(dummyConfig{}),
 			},
 		},
 		{
@@ -234,7 +228,7 @@ func TestShowAIError(t *testing.T) {
 			expectedAE: &proto.ActionableErr{
 				ErrCode:     proto.StatusCode_STATUSCHECK_UNKNOWN,
 				Message:     "failed: something went wrong",
-				Suggestions: reportIssueSuggestion(dummyRunCtx),
+				Suggestions: reportIssueSuggestion(dummyConfig{}),
 			},
 		},
 		{
@@ -245,35 +239,35 @@ func TestShowAIError(t *testing.T) {
 			expectedAE: &proto.ActionableErr{
 				ErrCode:     proto.StatusCode_DEVINIT_UNKNOWN,
 				Message:     "failed: something went wrong",
-				Suggestions: reportIssueSuggestion(dummyRunCtx),
+				Suggestions: reportIssueSuggestion(dummyConfig{}),
 			},
 		},
 		{
 			description: "deploy failed",
-			opts:        config.SkaffoldOptions{},
-			context:     &config.ContextConfig{},
+			cfg:         dummyConfig{kubectx: "gke_test"},
 			phase:       Deploy,
 			err:         fmt.Errorf(`exiting dev mode because first deploy failed: unable to connect to Kubernetes: Get "https://192.168.64.3:8443/version?timeout=32s": net/http: TLS handshake timeout`),
-			expected:    "Deploy Failed. Could not connect to cluster test_cluster due to \"https://192.168.64.3:8443/version?timeout=32s\": net/http: TLS handshake timeout. Check your connection for the cluster.",
+			expected:    "Deploy Failed. Could not connect to cluster due to \"https://192.168.64.3:8443/version?timeout=32s\": net/http: TLS handshake timeout. Check your connection for gke_test cluster.",
 			expectedAE: &proto.ActionableErr{
 				ErrCode: proto.StatusCode_DEPLOY_CLUSTER_CONNECTION_ERR,
 				Message: "exiting dev mode because first deploy failed: unable to connect to Kubernetes: Get \"https://192.168.64.3:8443/version?timeout=32s\": net/http: TLS handshake timeout",
 				Suggestions: []*proto.Suggestion{{
 					SuggestionCode: proto.SuggestionCode_CHECK_CLUSTER_CONNECTION,
-					Action:         "Check your connection for the cluster",
+					Action:         "Check your connection for gke_test cluster",
 				}},
 			},
 		},
 	}
 	for _, test := range append(tests, initTestCases...) {
 		testutil.Run(t, test.description, func(t *testutil.T) {
-			t.Override(&getConfigForCurrentContext, func(string) (*config.ContextConfig, error) {
-				return test.context, nil
-			})
-			runCtx = runcontext.RunContext{KubeContext: "test_cluster", Opts: test.opts}
-			actual := ShowAIError(test.err)
+			if test.cfg != nil && test.cfg.GlobalConfig() != "" {
+				t.Override(&getConfigForCurrentContext, func(configFile string) (*config.ContextConfig, error) {
+					return &config.ContextConfig{DefaultRepo: "some"}, nil
+				})
+			}
+			actual := ShowAIError(test.cfg, test.err)
 			t.CheckDeepEqual(test.expected, actual.Error())
-			actualAE := ActionableErr(test.phase, test.err)
+			actualAE := ActionableErr(test.cfg, test.phase, test.err)
 			t.CheckDeepEqual(test.expectedAE, actualAE)
 		})
 	}
@@ -288,45 +282,45 @@ func TestIsOldImageManifestProblem(t *testing.T) {
 		expected    bool
 	}{
 		{
-			description: "dev command older manifest with image name",
+			description: "dev cmd older manifest with image name",
 			command:     "dev",
 			err:         fmt.Errorf(`listing files: parsing ONBUILD instructions: retrieving image "library/ruby:2.3.0": unsupported MediaType: "application/vnd.docker.distribution.manifest.v1+prettyjws", see https://github.com/google/go-containerregistry/issues/377`),
 			expectedMsg: "Could not retrieve image library/ruby:2.3.0 pushed with the deprecated manifest v1. Ignoring files dependencies for all ONBUILD triggers. To avoid, hit Cntrl-C and run `docker pull` to fetch the specified image and retry.",
 			expected:    true,
 		},
 		{
-			description: "dev command older manifest without image name",
+			description: "dev cmd older manifest without image name",
 			command:     "dev",
 			err:         fmt.Errorf(`unsupported MediaType: "application/vnd.docker.distribution.manifest.v1+prettyjws", see https://github.com/google/go-containerregistry/issues/377`),
 			expectedMsg: "Could not retrieve image pushed with the deprecated manifest v1. Ignoring files dependencies for all ONBUILD triggers. To avoid, hit Cntrl-C and run `docker pull` to fetch the specified image and retry.",
 			expected:    true,
 		},
 		{
-			description: "dev command with random name",
+			description: "dev cmd with random name",
 			command:     "dev",
 			err:         fmt.Errorf(`listing files: parsing ONBUILD instructions: retrieve image "noimage" image does not exits`),
 		},
 		{
-			description: "debug command older manifest",
+			description: "debug cmd older manifest",
 			command:     "debug",
 			err:         fmt.Errorf(`unsupported MediaType: "application/vnd.docker.distribution.manifest.v1+prettyjws", see https://github.com/google/go-containerregistry/issues/377`),
 			expectedMsg: "Could not retrieve image pushed with the deprecated manifest v1. Ignoring files dependencies for all ONBUILD triggers. To avoid, hit Cntrl-C and run `docker pull` to fetch the specified image and retry.",
 			expected:    true,
 		},
 		{
-			description: "build command older manifest",
+			description: "build cmd older manifest",
 			command:     "build",
 			err:         fmt.Errorf(`unsupported MediaType: "application/vnd.docker.distribution.manifest.v1+prettyjws", see https://github.com/google/go-containerregistry/issues/377`),
 			expected:    true,
 		},
 		{
-			description: "run command older manifest",
+			description: "run cmd older manifest",
 			command:     "run",
 			err:         fmt.Errorf(`unsupported MediaType: "application/vnd.docker.distribution.manifest.v1+prettyjws", see https://github.com/google/go-containerregistry/issues/377`),
 			expected:    true,
 		},
 		{
-			description: "deploy command older manifest",
+			description: "deploy cmd older manifest",
 			command:     "deploy",
 			err:         fmt.Errorf(`unsupported MediaType: "application/vnd.docker.distribution.manifest.v1+prettyjws", see https://github.com/google/go-containerregistry/issues/377`),
 			expected:    true,
@@ -334,20 +328,32 @@ func TestIsOldImageManifestProblem(t *testing.T) {
 	}
 	for _, test := range tests {
 		testutil.Run(t, test.description, func(t *testutil.T) {
-			runCtx = runcontext.RunContext{
-				Opts: config.SkaffoldOptions{
-					Command: test.command,
-				},
-			}
-			actualMsg, actual := IsOldImageManifestProblem(test.err)
+			actualMsg, actual := IsOldImageManifestProblem(dummyConfig{cmd: test.command}, test.err)
 			t.CheckDeepEqual(test.expectedMsg, actualMsg)
 			t.CheckDeepEqual(test.expected, actual)
 		})
 	}
 }
 
-func stringOrUndefined(s string) config.StringOrUndefined {
-	c := &config.StringOrUndefined{}
-	c.Set(s)
-	return *c
+type dummyConfig struct {
+	kubectx   string
+	repo      string
+	globalCfg string
+	cmd       string
+}
+
+func (d dummyConfig) GetKubeContext() string {
+	return d.kubectx
+}
+func (d dummyConfig) DefaultRepo() *string {
+	if d.repo == "" {
+		return nil
+	}
+	return &d.repo
+}
+func (d dummyConfig) GlobalConfig() string {
+	return d.globalCfg
+}
+func (d dummyConfig) Command() string {
+	return d.cmd
 }

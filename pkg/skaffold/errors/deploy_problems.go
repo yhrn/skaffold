@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/cluster"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/proto/v1"
 )
 
@@ -29,20 +28,20 @@ var (
 	isMinikube = cluster.GetClient().IsMinikube
 )
 
-func suggestDeployFailedAction(runCtx runcontext.RunContext) []*proto.Suggestion {
-	if isMinikube(runCtx.KubeContext) {
+func suggestDeployFailedAction(cfg Config) []*proto.Suggestion {
+	if isMinikube(cfg.GetKubeContext()) {
 		command := "minikube status"
-		if runCtx.KubeContext != "minikube" {
-			command = fmt.Sprintf("minikube status -p %s", runCtx.KubeContext)
+		if cfg.GetKubeContext() != "minikube" {
+			command = fmt.Sprintf("minikube status -p %s", cfg.GetKubeContext())
 		}
 		return []*proto.Suggestion{{
 			SuggestionCode: proto.SuggestionCode_CHECK_MINIKUBE_STATUS,
-			Action:         fmt.Sprintf("Check if minikube is running using `%s` command and try again.", command),
+			Action:         fmt.Sprintf("Check if minikube is running using `%s` cmd and try again.", command),
 		}}
 	}
 
 	return []*proto.Suggestion{{
 		SuggestionCode: proto.SuggestionCode_CHECK_CLUSTER_CONNECTION,
-		Action:         "Check your connection for the cluster",
+		Action:         fmt.Sprintf("Check your connection for %s cluster", cfg.GetKubeContext()),
 	}}
 }

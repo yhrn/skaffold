@@ -230,7 +230,7 @@ func extractCopyCommands(nodes []*parser.Node, onlyLastImage bool, cfg Config) (
 				img, err := RetrieveImage(from.image, cfg)
 				if err == nil {
 					workdir = img.Config.WorkingDir
-				} else if _, ok := sErrors.IsOldImageManifestProblem(err); !ok {
+				} else if _, ok := sErrors.IsOldImageManifestProblem(cfg, err); !ok {
 					return nil, err
 				}
 				if workdir == "" {
@@ -335,7 +335,7 @@ func expandOnbuildInstructions(nodes []*parser.Node, cfg Config) ([]*parser.Node
 				onbuildNodes = ons
 			} else if ons, err := parseOnbuild(from.image, cfg); err == nil {
 				onbuildNodes = ons
-			} else if warnMsg, ok := sErrors.IsOldImageManifestProblem(err); ok && warnMsg != "" {
+			} else if warnMsg, ok := sErrors.IsOldImageManifestProblem(cfg, err); ok && warnMsg != "" {
 				logrus.Warn(warnMsg)
 			} else if !ok {
 				return nil, fmt.Errorf("parsing ONBUILD instructions: %w", err)

@@ -56,7 +56,10 @@ type Config interface {
 	GetKubeContext() string
 	MinikubeProfile() string
 	GetInsecureRegistries() map[string]bool
+	Command() string
 	Mode() config.RunMode
+	DefaultRepo() *string
+	GlobalConfig() string
 }
 
 // NewAPIClientImpl guesses the docker client to use based on current Kubernetes context.

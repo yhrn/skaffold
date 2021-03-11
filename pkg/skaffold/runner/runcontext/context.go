@@ -148,6 +148,7 @@ func (rc *RunContext) AutoDeploy() bool                          { return rc.Opt
 func (rc *RunContext) AutoSync() bool                            { return rc.Opts.AutoSync }
 func (rc *RunContext) CacheArtifacts() bool                      { return rc.Opts.CacheArtifacts }
 func (rc *RunContext) CacheFile() string                         { return rc.Opts.CacheFile }
+func (rc *RunContext) Command() string                           { return rc.Opts.Command }
 func (rc *RunContext) ConfigurationFile() string                 { return rc.Opts.ConfigurationFile }
 func (rc *RunContext) CustomLabels() []string                    { return rc.Opts.CustomLabels }
 func (rc *RunContext) CustomTag() string                         { return rc.Opts.CustomTag }

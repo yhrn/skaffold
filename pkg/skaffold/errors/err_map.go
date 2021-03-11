@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/proto/v1"
 )
 
@@ -56,7 +55,7 @@ var (
 			description: func(error) string {
 				return "Build Cancelled."
 			},
-			suggestion: func(_ runcontext.RunContext) []*proto.Suggestion {
+			suggestion: func(cfg Config) []*proto.Suggestion {
 				return nil
 			},
 		},
@@ -66,7 +65,7 @@ var (
 				return "Build Failed"
 			},
 			errCode: proto.StatusCode_BUILD_PROJECT_NOT_FOUND,
-			suggestion: func(_ runcontext.RunContext) []*proto.Suggestion {
+			suggestion: func(_ Config) []*proto.Suggestion {
 				return []*proto.Suggestion{{
 					SuggestionCode: proto.SuggestionCode_CHECK_GCLOUD_PROJECT,
 					Action:         "Check your GCR project",
@@ -83,7 +82,7 @@ var (
 				}
 				return "Build Failed. Could not connect to Docker daemon"
 			},
-			suggestion: func(runcontext.RunContext) []*proto.Suggestion {
+			suggestion: func(cfg Config) []*proto.Suggestion {
 				return []*proto.Suggestion{{
 					SuggestionCode: proto.SuggestionCode_CHECK_DOCKER_RUNNING,
 					Action:         "Check if docker is running",
@@ -105,8 +104,8 @@ var (
 			return fmt.Sprintf("%s. Ignoring files dependencies for all ONBUILD triggers", pre)
 		},
 		errCode: proto.StatusCode_DEVINIT_UNSUPPORTED_V1_MANIFEST,
-		suggestion: func(runCtx runcontext.RunContext) []*proto.Suggestion {
-			if runCtx.Opts.Command == dev || runCtx.Opts.Command == debug {
+		suggestion: func(cfg Config) []*proto.Suggestion {
+			if cfg.Command() == dev || cfg.Command() == debug {
 				return []*proto.Suggestion{{
 					SuggestionCode: proto.SuggestionCode_RUN_DOCKER_PULL,
 					Action:         "To avoid, hit Cntrl-C and run `docker pull` to fetch the specified image and retry",
@@ -124,9 +123,9 @@ var (
 			description: func(err error) string {
 				matchExp := re("(?i).*unable to connect.*Get (.*)")
 				if match := matchExp.FindStringSubmatch(fmt.Sprintf("%s", err)); len(match) >= 2 {
-					return fmt.Sprintf("Deploy Failed. Could not connect to cluster %s due to %s", runCtx.KubeContext, match[1])
+					return fmt.Sprintf("Deploy Failed. Could not connect to cluster due to %s", match[1])
 				}
-				return fmt.Sprintf("Deploy Failed. Could not connect to %s cluster.", runCtx.KubeContext)
+				return "Deploy Failed. Could not connect to cluster."
 			},
 			suggestion: suggestDeployFailedAction,
 		},
