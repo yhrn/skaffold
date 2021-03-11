@@ -17,16 +17,23 @@ limitations under the License.
 package event
 
 import (
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 )
 
-type Config interface {
-	Command() string
-	GetKubeContext() string
-	DefaultRepo() *string
-	GlobalConfig() string
-  AutoBuild() bool
-  AutoDeploy() bool
-  AutoSync() bool
-	GetPipelines() []latest.Pipeline
+func InitializeState(pipes []latest.Pipeline) {
+	cfg := config{
+		pipes: pipes,
+	}
+	event.InitializeState(cfg)
 }
+
+type config struct {
+	pipes []latest.Pipeline
+}
+
+func (c config) AutoBuild() bool                 { return true }
+func (c config) AutoDeploy() bool                { return true }
+func (c config) AutoSync() bool                  { return true }
+func (c config) GetPipelines() []latest.Pipeline { return c.pipes }
+func (c config) GetKubeContext() string          { return "temp" }
