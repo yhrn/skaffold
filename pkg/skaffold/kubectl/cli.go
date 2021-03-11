@@ -33,6 +33,7 @@ type CLI struct {
 
 	version     ClientVersion
 	versionOnce sync.Once
+	cfg         Config
 }
 
 type Config interface {
@@ -52,6 +53,7 @@ func NewCLI(cfg Config, defaultNamespace string) *CLI {
 	return &CLI{
 		KubeContext: cfg.GetKubeContext(),
 		KubeConfig:  cfg.GetKubeConfig(),
+		cfg:         cfg,
 		Namespace:   ns,
 	}
 }

@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/proto/v1"
 	"github.com/GoogleContainerTools/skaffold/testutil"
 )
@@ -60,9 +59,18 @@ func TestUserError(t *testing.T) {
 			t.Override(&isMinikube, func(string) bool {
 				return test.isMinikube
 			})
-			sErrors.SetRunContext(runcontext.RunContext{KubeContext: "test"})
-			actual := UserError(test.err, proto.StatusCode_DEPLOY_HELM_USER_ERR)
-			t.CheckDeepEqual(test.expected, sErrors.ShowAIError(actual).Error())
+			actual := UserError(errConfig{}, test.err, proto.StatusCode_DEPLOY_HELM_USER_ERR)
+			t.CheckDeepEqual(test.expected, sErrors.ShowAIError(errConfig{}, actual).Error())
 		})
 	}
+}
+
+type errConfig struct{}
+
+func (e errConfig) GetKubeContext() string { return "test" }
+func (e errConfig) GlobalConfig() string   { return "" }
+func (e errConfig) Command() string        { return "" }
+func (e errConfig) DefaultRepo() *string {
+	o := ""
+	return &o
 }

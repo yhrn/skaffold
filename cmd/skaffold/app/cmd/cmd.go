@@ -23,6 +23,7 @@ import (
 	"os"
 	"strings"
 
+	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -265,12 +266,12 @@ func setUpLogs(stdErr io.Writer, level string, timestamp bool) error {
 	return nil
 }
 
-func alwaysSucceedWhenCancelled(ctx context.Context, err error) error {
+func alwaysSucceedWhenCancelled(ctx context.Context, cfg sErrors.Config, err error) error {
 	// if the context was cancelled act as if all is well
-	if err != nil && ctx.Err() == context.Canceled {
+	if err == nil || ctx.Err() == context.Canceled {
 		return nil
 	}
-	return err
+	return sErrors.ShowAIError(cfg, err)
 }
 
 func isHouseKeepingMessagesAllowed(cmd *cobra.Command) bool {

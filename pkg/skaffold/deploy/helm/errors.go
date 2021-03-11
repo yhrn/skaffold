@@ -67,8 +67,8 @@ func helmLabelErr(err error) error {
 		})
 }
 
-func userErr(prefix string, err error) error {
-	return deployerr.UserError(errors.Wrap(err, prefix), proto.StatusCode_DEPLOY_HELM_USER_ERR)
+func userErr(cfg sErrors.Config, prefix string, err error) error {
+	return deployerr.UserError(cfg, errors.Wrap(err, prefix), proto.StatusCode_DEPLOY_HELM_USER_ERR)
 }
 
 func noMatchingBuild(image string) error {

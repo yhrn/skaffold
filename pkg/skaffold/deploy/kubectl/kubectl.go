@@ -25,6 +25,7 @@ import (
 	"os"
 	"strings"
 
+	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
 	"github.com/segmentio/textio"
 	"github.com/sirupsen/logrus"
 
@@ -45,6 +46,7 @@ type Deployer struct {
 	*latest.KubectlDeploy
 
 	originalImages     []build.Artifact
+	errCfg             sErrors.Config
 	workingDir         string
 	globalConfig       string
 	gcsManifestDir     string
@@ -76,6 +78,7 @@ func NewDeployer(cfg Config, labels map[string]string, d *latest.KubectlDeploy) 
 		insecureRegistries: cfg.GetInsecureRegistries(),
 		skipRender:         cfg.SkipRender(),
 		labels:             labels,
+		errCfg:             cfg,
 	}, nil
 }
 
@@ -130,19 +133,19 @@ func (k *Deployer) manifestFiles(manifests []string) ([]string, error) {
 
 	list, err := util.ExpandPathsGlob(k.workingDir, nonURLManifests)
 	if err != nil {
-		return nil, userErr(fmt.Errorf("expanding kubectl manifest paths: %w", err))
+		return nil, userErr(k.errCfg, fmt.Errorf("expanding kubectl manifest paths: %w", err))
 	}
 
 	if len(gcsManifests) != 0 {
 		// return tmp dir of the downloaded manifests
 		tmpDir, err := manifest.DownloadFromGCS(gcsManifests)
 		if err != nil {
-			return nil, userErr(fmt.Errorf("downloading from GCS: %w", err))
+			return nil, userErr(k.errCfg, fmt.Errorf("downloading from GCS: %w", err))
 		}
 		k.gcsManifestDir = tmpDir
 		l, err := util.ExpandPathsGlob(tmpDir, []string{"*"})
 		if err != nil {
-			return nil, userErr(fmt.Errorf("expanding kubectl manifest paths: %w", err))
+			return nil, userErr(k.errCfg, fmt.Errorf("expanding kubectl manifest paths: %w", err))
 		}
 		list = append(list, l...)
 	}

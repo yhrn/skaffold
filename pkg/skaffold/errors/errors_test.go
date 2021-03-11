@@ -342,18 +342,12 @@ type dummyConfig struct {
 	cmd       string
 }
 
-func (d dummyConfig) GetKubeContext() string {
-	return d.kubectx
-}
+func (d dummyConfig) GetKubeContext() string { return d.kubectx }
+func (d dummyConfig) GlobalConfig() string   { return d.globalCfg }
+func (d dummyConfig) Command() string        { return d.cmd }
 func (d dummyConfig) DefaultRepo() *string {
 	if d.repo == "" {
 		return nil
 	}
 	return &d.repo
-}
-func (d dummyConfig) GlobalConfig() string {
-	return d.globalCfg
-}
-func (d dummyConfig) Command() string {
-	return d.cmd
 }

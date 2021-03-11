@@ -90,7 +90,7 @@ func (s *scheduler) build(ctx context.Context, tags tag.ImageTags, i int) error 
 
 	w, closeFn, err := s.logger.GetWriter()
 	if err != nil {
-		event.BuildFailed(s., a.ImageName, err)
+		event.BuildFailed(a.ImageName, err)
 		return err
 	}
 	defer closeFn()

@@ -91,12 +91,12 @@ func TestDeployInProgress(t *testing.T) {
 
 func TestDeployFailed(t *testing.T) {
 	defer func() { handler = newHandler() }()
-
+	cfg := mockCfg([]latest.Pipeline{{}}, "test")
 	handler = newHandler()
-	handler.state = emptyState(mockCfg([]latest.Pipeline{{}}, "test"))
+	handler.state = emptyState(cfg)
 
 	wait(t, func() bool { return handler.getState().DeployState.Status == NotStarted })
-	DeployFailed(errors.New("BUG"))
+	DeployFailed(cfg, errors.New("BUG"))
 	wait(t, func() bool {
 		dState := handler.getState().DeployState
 		return dState.Status == Failed && dState.StatusCode == proto.StatusCode_DEPLOY_UNKNOWN
@@ -609,6 +609,12 @@ func (c config) AutoBuild() bool                 { return true }
 func (c config) AutoDeploy() bool                { return true }
 func (c config) AutoSync() bool                  { return true }
 func (c config) GetPipelines() []latest.Pipeline { return c.pipes }
+func (c config) GlobalConfig() string            { return "conf" }
+func (c config) Command() string                 { return "dev" }
+func (c config) DefaultRepo() *string {
+	o := ""
+	return &o
+}
 
 func mockCfg(pipes []latest.Pipeline, kubectx string) config {
 	return config{

@@ -22,11 +22,11 @@ import (
 
 type Config interface {
 	Command() string
-	GetKubeContext() string
 	DefaultRepo() *string
 	GlobalConfig() string
-  AutoBuild() bool
-  AutoDeploy() bool
-  AutoSync() bool
+	GetKubeContext() string
+	AutoBuild() bool
+	AutoDeploy() bool
+	AutoSync() bool
 	GetPipelines() []latest.Pipeline
 }

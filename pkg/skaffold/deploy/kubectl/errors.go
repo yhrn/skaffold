@@ -89,6 +89,6 @@ func listManifestErr(err error) error {
 		})
 }
 
-func userErr(err error) error {
-	return deployerr.UserError(err, proto.StatusCode_DEPLOY_KUBECTL_USER_ERR)
+func userErr(cfg sErrors.Config, err error) error {
+	return deployerr.UserError(cfg, err, proto.StatusCode_DEPLOY_KUBECTL_USER_ERR)
 }

@@ -23,6 +23,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
@@ -590,7 +592,8 @@ func TestGetDependencies(t *testing.T) {
 			}
 
 			workspace := tmpDir.Path(test.workspace)
-			deps, err := GetDependencies(context.Background(), NewBuildConfig(workspace, "test", "Dockerfile", test.buildArgs), nil)
+			deps, err := GetDependencies(context.Background(), NewBuildConfig(workspace, "test", "Dockerfile", test.buildArgs),
+				&runcontext.RunContext{Pipelines: runcontext.NewPipelines([]latest.Pipeline{{}})})
 
 			t.CheckError(test.shouldErr, err)
 			t.CheckDeepEqual(test.expected, deps)
@@ -720,7 +723,8 @@ func TestGetDependenciesCached(t *testing.T) {
 					return v
 				})
 			}
-			deps, err := GetDependenciesCached(context.Background(), NewBuildConfig(tmpDir.Root(), "dummy", "Dockerfile", map[string]*string{}), nil)
+			deps, err := GetDependenciesCached(context.Background(), NewBuildConfig(tmpDir.Root(), "dummy", "Dockerfile", map[string]*string{}),
+				&runcontext.RunContext{Pipelines: runcontext.NewPipelines([]latest.Pipeline{})})
 			t.CheckErrorAndDeepEqual(test.shouldErr, err, test.expected, deps)
 		})
 	}

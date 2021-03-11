@@ -36,4 +36,10 @@ func (c config) AutoBuild() bool                 { return true }
 func (c config) AutoDeploy() bool                { return true }
 func (c config) AutoSync() bool                  { return true }
 func (c config) GetPipelines() []latest.Pipeline { return c.pipes }
-func (c config) GetKubeContext() string          { return "temp" }
+func (c config) GetKubeContext() string          { return "" }
+func (c config) GlobalConfig() string            { return "conf" }
+func (c config) Command() string                 { return "dev" }
+func (c config) DefaultRepo() *string {
+	o := ""
+	return &o
+}

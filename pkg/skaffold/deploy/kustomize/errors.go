@@ -18,9 +18,10 @@ package kustomize
 
 import (
 	deployerr "github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy/error"
+	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
 	"github.com/GoogleContainerTools/skaffold/proto/v1"
 )
 
-func userErr(err error) error {
-	return deployerr.UserError(err, proto.StatusCode_DEPLOY_KUSTOMIZE_USER_ERR)
+func userErr(cfg sErrors.Config, err error) error {
+	return deployerr.UserError(cfg, err, proto.StatusCode_DEPLOY_KUSTOMIZE_USER_ERR)
 }

@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
@@ -42,6 +43,7 @@ type CLI struct {
 	forceDeploy      bool
 	waitForDeletions config.WaitForDeletions
 	previousApply    manifest.ManifestList
+	cfg              sErrors.Config
 }
 
 type Config interface {
@@ -58,6 +60,7 @@ func NewCLI(cfg Config, flags latest.KubectlFlags, defaultNameSpace string) CLI 
 		Flags:            flags,
 		forceDeploy:      cfg.ForceDeploy(),
 		waitForDeletions: cfg.WaitForDeletions(),
+		cfg:              cfg,
 	}
 }
 
@@ -92,7 +95,7 @@ func (c *CLI) Apply(ctx context.Context, out io.Writer, manifests manifest.Manif
 	}
 
 	if err := c.Run(ctx, updated.Reader(), out, "apply", c.args(c.Flags.Apply, args...)...); err != nil {
-		return userErr(fmt.Errorf("kubectl apply: %w", err))
+		return userErr(c.cfg, fmt.Errorf("kubectl apply: %w", err))
 	}
 
 	return nil

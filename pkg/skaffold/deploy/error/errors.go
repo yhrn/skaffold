@@ -24,7 +24,6 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/cluster"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/proto/v1"
 )
 
@@ -78,16 +77,18 @@ func isClusterInternalSystemError(err error) bool {
 	return internalServerError.MatchString(err.Error())
 }
 
-func internalSystemError(err error) error {
+func internalSystemError(cfg sErrors.Config, err error) error {
 	return sErrors.NewProblem(
 		func(err error) string {
 			return fmt.Sprintf("Deploy Failed. %v", err)
 		},
 		proto.StatusCode_DEPLOY_CLUSTER_INTERNAL_SYSTEM_ERR,
-		func(runCtx runcontext.RunContext) []*proto.Suggestion {
-			action := fmt.Sprintf("Something went wrong with your cluster %q", runCtx.KubeContext)
-			if isMinikube(runCtx.KubeContext) {
-				action = fmt.Sprintf("Run minikube status -p %s to check if minikube is running", runCtx.KubeContext)
+		cfg,
+		func(cfg sErrors.Config) []*proto.Suggestion {
+			kubectx := cfg.GetKubeContext()
+			action := fmt.Sprintf("Something went wrong with your cluster %q", kubectx)
+			if isMinikube(kubectx) {
+				action = fmt.Sprintf("Run minikube status -p %s to check if minikube is running", kubectx)
 			}
 			return []*proto.Suggestion{{
 				SuggestionCode: proto.SuggestionCode_OPEN_ISSUE,
@@ -99,12 +100,12 @@ func internalSystemError(err error) error {
 	)
 }
 
-func UserError(err error, sc proto.StatusCode) error {
+func UserError(cfg sErrors.Config, err error, sc proto.StatusCode) error {
 	if sErrors.IsSkaffoldErr(err) {
 		return err
 	}
 	if isClusterInternalSystemError(err) {
-		return internalSystemError(err)
+		return internalSystemError(cfg, err)
 	}
 	return sErrors.NewError(err,
 		proto.ActionableErr{

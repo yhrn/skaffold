@@ -24,6 +24,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
 	"github.com/segmentio/textio"
 	yamlv3 "gopkg.in/yaml.v3"
 
@@ -92,6 +93,7 @@ type secretGenerator struct {
 // Deployer deploys workflows using kustomize CLI.
 type Deployer struct {
 	*latest.KustomizeDeploy
+	errCfg sErrors.Config
 
 	kubectl             kubectl.CLI
 	insecureRegistries  map[string]bool
@@ -116,6 +118,7 @@ func NewDeployer(cfg kubectl.Config, labels map[string]string, d *latest.Kustomi
 
 	return &Deployer{
 		KustomizeDeploy:     d,
+		errCfg:              cfg,
 		kubectl:             kubectl,
 		insecureRegistries:  cfg.GetInsecureRegistries(),
 		globalConfig:        cfg.GlobalConfig(),
@@ -221,7 +224,7 @@ func (k *Deployer) Dependencies() ([]string, error) {
 	for _, kustomizePath := range k.KustomizePaths {
 		depsForKustomization, err := DependenciesForKustomization(kustomizePath)
 		if err != nil {
-			return nil, userErr(err)
+			return nil, userErr(k.errCfg, err)
 		}
 		deps.Insert(depsForKustomization...)
 	}
@@ -289,7 +292,7 @@ func (k *Deployer) readManifests(ctx context.Context) (manifest.ManifestList, er
 		}
 
 		if err != nil {
-			return nil, userErr(err)
+			return nil, userErr(k.errCfg, err)
 		}
 
 		if len(out) == 0 {
