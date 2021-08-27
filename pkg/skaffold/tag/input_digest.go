@@ -27,7 +27,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -94,11 +93,11 @@ func fileHasher(path string, workspacePath string) (string, error) {
 	}
 	// Always use the file path within workspace when calculating hash.
 	// This will ensure we will always get the same hash independent of workspace location and hierarchy.
-  if (workspacePath == ".") {
-    h.Write([]byte(filepath.Clean(path)))
-  } else {
-    h.Write([]byte(filepath.Clean(strings.Replace(path, workspacePath+string(os.PathSeparator), "", 1))))
+	relPath, err := filepath.Rel(workspacePath, path)
+  if err != nil {
+    return "", err
   }
+  h.Write([]byte(relPath))
 	if fi.Mode().IsRegular() {
 		f, err := os.Open(path)
 		if err != nil {
