@@ -95,9 +95,10 @@ func fileHasher(path string, workspacePath string) (string, error) {
 	// This will ensure we will always get the same hash independent of workspace location and hierarchy.
 	relPath, err := filepath.Rel(workspacePath, path)
 	if err != nil {
-		return "", err
+		h.Write([]byte(filepath.Clean(path)))
+	} else {
+		h.Write([]byte(relPath))
 	}
-	h.Write([]byte(relPath))
 	if fi.Mode().IsRegular() {
 		f, err := os.Open(path)
 		if err != nil {
