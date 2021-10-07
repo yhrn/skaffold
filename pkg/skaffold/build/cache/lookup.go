@@ -66,6 +66,9 @@ func (c *cache) lookup(ctx context.Context, a *latestV1.Artifact, tag string, h 
 	c.cacheMutex.RLock()
 	entry, cacheHit := c.artifactCache[hash]
 	c.cacheMutex.RUnlock()
+
+	fmt.Printf("Cache hit: %v for image: %s with tag: %s using key : %s\n", cacheHit, a.ImageName, tag, hash)
+
 	if !cacheHit {
 		if entry, err = c.tryImport(ctx, a, tag, hash); err != nil {
 			log.Entry(ctx).Debugf("Could not import artifact from Docker, building instead (%s)", err)
